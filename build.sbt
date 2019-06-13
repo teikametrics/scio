@@ -738,6 +738,7 @@ lazy val scioExamples: Project = Project(
 ).settings(
     commonSettings ++ noPublishSettings ++ soccoSettings ++ beamRunnerSettings,
     libraryDependencies ++= Seq(
+      "me.lyh" %% "parquet-avro-extra" % parquetAvroExtraVersion,
       "me.lyh" %% "shapeless-datatype-avro" % shapelessDatatypeVersion,
       "me.lyh" %% "shapeless-datatype-datastore_1.3" % shapelessDatatypeVersion,
       "me.lyh" %% "shapeless-datatype-tensorflow" % shapelessDatatypeVersion,
