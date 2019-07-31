@@ -150,7 +150,9 @@ sealed trait AvroIO[T] extends ScioIO[T] {
 
 }
 
-final case class SpecificRecordIO[T <: SpecificRecord: ClassTag: Coder](path: String)
+final case class SpecificRecordIO[T <: SpecificRecord: ClassTag: Coder]
+(path: String,
+ schema: Option[Schema] = None[Schema])
     extends AvroIO[T] {
   override type ReadP = Unit
   override type WriteP = AvroIO.WriteParam
@@ -173,7 +175,7 @@ final case class SpecificRecordIO[T <: SpecificRecord: ClassTag: Coder](path: St
    */
   override protected def write(data: SCollection[T], params: WriteP): Tap[T] = {
     val cls = ScioUtil.classOf[T]
-    val t = beam.AvroIO.write(cls)
+    val t = avroWrite(cls)
     data.applyInternal(
       avroOut(data, t, path, params.numShards, params.suffix, params.codec, params.metadata)
     )
@@ -182,6 +184,12 @@ final case class SpecificRecordIO[T <: SpecificRecord: ClassTag: Coder](path: St
 
   override def tap(read: ReadP): Tap[T] =
     SpecificRecordTap[T](ScioUtil.addPartSuffix(path))
+
+  private def avroWrite(cls: Class[T]): beam.AvroIO.Write[T] = schema
+    .map(s =>
+      new beam.AvroIO.Write[T](beam.AvroIO.writeCustomType[T, T].withSchema(s))
+    )
+    .getOrElse(beam.AvroIO.write(cls))
 }
 
 final case class GenericRecordIO[T: ClassTag: Coder](val path: String, val schema: Schema)

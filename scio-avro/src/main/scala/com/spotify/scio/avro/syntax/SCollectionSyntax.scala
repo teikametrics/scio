@@ -34,8 +34,7 @@ import scala.reflect.runtime.universe._
 final class GenericRecordSCollectionOps[T](private val self: SCollection[T]) extends AnyVal {
 
   /**
-   * Save this SCollection of type
-   * [[org.apache.avro.specific.SpecificRecord SpecificRecord]] as an Avro file.
+   * Save this SCollection of generic records as an Avro file.
    */
   // scalastyle:off parameter.number
   def saveAsAvroFile(
@@ -85,6 +84,23 @@ final class SpecificRecordSCollectionOps[T <: SpecificRecord](private val self: 
   )(implicit ct: ClassTag[T], coder: Coder[T]): ClosedTap[T] = {
     val param = AvroIO.WriteParam(numShards, suffix, codec, metadata)
     self.write(SpecificRecordIO[T](path))(param)
+  }
+
+  /**
+   * Save this SCollection of type
+   * [[org.apache.avro.specific.SpecificRecord SpecificRecord]] as an Avro file.
+   *
+   */
+  def saveSpecificRecordsAsAvroFile(
+    path: String,
+    schema: Schema,
+    numShards: Int = AvroIO.WriteParam.DefaultNumShards,
+    suffix: String = AvroIO.WriteParam.DefaultSuffix,
+    codec: CodecFactory = AvroIO.WriteParam.DefaultCodec,
+    metadata: Map[String, AnyRef] = AvroIO.WriteParam.DefaultMetadata
+  )(implicit ct: ClassTag[T], coder: Coder[T]): ClosedTap[T] = {
+    val param = AvroIO.WriteParam(numShards, suffix, codec, metadata)
+    self.write(SpecificRecordIO[T](path, Some(schema)))(param)
   }
 }
 
